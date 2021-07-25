@@ -103,9 +103,11 @@ int main(int argc, char* argv[]) {
 			}
 		}
 	}
-	*/
 	
 	printf("Tudo Certinho!\n");
+	*/
+	
+	
 	
 	
 	//liberação de memória
