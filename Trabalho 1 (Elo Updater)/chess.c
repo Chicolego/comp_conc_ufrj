@@ -68,7 +68,6 @@ int main(int argc, char** argv)
     compare(_playersConc, _playersSeq);
     analyze(seqTimeSimulation, concTimeSimulation, "simulacao");
     analyze(seqTimeMergeSort, concTimeMergeSort, "merge sort");
-	printRanking(_playersConc);
     finalize();
 }
 
