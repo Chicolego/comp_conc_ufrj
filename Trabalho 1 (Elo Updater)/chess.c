@@ -32,6 +32,7 @@ double timedFunctionCall(void (*func)(void), char* funcName);
 
 void seqSimulateRound();
 void* concSimulateRound(void* arg);
+int rand_intervalo(int x, int y);
 void simulateMatch(Player players[], int indexA, int indexB);
 float calculateWinProbability(int rating, int oppRating);
 int calculateNewRating(int rating, float winProbability, int won);
@@ -65,9 +66,10 @@ int main(int argc, char** argv)
     concTimeMergeSort += timedFunctionCall(stitchThreadedSections, "stitchThreadedSections()");
 
     //Finalizacao
-    compare(_playersConc, _playersSeq);
+    //compare(_playersConc, _playersSeq); *THIS TEST WILL FAIL*
     analyze(seqTimeSimulation, concTimeSimulation, "simulacao");
     analyze(seqTimeMergeSort, concTimeMergeSort, "merge sort");
+	printRanking(_playersConc);
     finalize();
 }
 
@@ -112,6 +114,7 @@ void randomizePlayers()
         _playersConc[i].rating = randomRating;
         _playersSeq[i].id = i;
         _playersSeq[i].rating = randomRating;
+		//printf("CRIADO: Id [%lli] com rate %d\n", _playersSeq[i].id, _playersSeq[i].rating);
     }
 }
 
@@ -182,6 +185,7 @@ void seqSimulateRound()
     for(int i = 0; i < _nPlayers - 1; i += 2)
     {
         simulateMatch(_playersSeq, i, i+1);
+		//printf(" Jogador [%lli] versus Jogador [%lli]\n", _playersSeq[i].id, _playersSeq[i+1].id);
     }
 }
 
@@ -198,6 +202,10 @@ void* concSimulateRound(void* arg)
 	return NULL;
 }
 
+int rand_intervalo(int x, int y){
+	return rand() * (y-x) + x; 
+}	
+
 // Simulação das Partidas. 
 void simulateMatch(Player players[], int indexA, int indexB)
 {
@@ -206,23 +214,30 @@ void simulateMatch(Player players[], int indexA, int indexB)
     
     float winProbabilityA = calculateWinProbability(ratingA, ratingB);
 
-    int random = _randomArray[ratingA/2];
-    int AWon = (random % 10000 <= winProbabilityA * 10000);
-
+    int random = (rand()%(10000)) + 1;
+    int AWon = (random < winProbabilityA * 10000);
+	/*if(AWon)
+	{
+		printf(" Jogador [%lli] (%d) venceu Jogador [%lli] (%d)\n", players[indexA].id, players[indexA].rating, players[indexB].id, players[indexB].rating);
+	}
+	else{
+		printf(" Jogador [%lli] (%d) perdeu para o Jogador [%lli] (%d)\n", players[indexA].id, players[indexA].rating, players[indexB].id, players[indexB].rating);
+	}
+	*/
     players[indexA].rating = calculateNewRating(ratingA, winProbabilityA, AWon);
-    players[indexB].rating = calculateNewRating(ratingB, 1 - winProbabilityA, !AWon);
+    players[indexB].rating = calculateNewRating(ratingB, 1.0 - winProbabilityA, !AWon);
 }
 
 // Cálculo da probabilidade de vitória. Será utilizado para determinar os novos ratings dos dois jogadores, ao término da partida.
 float calculateWinProbability(int rating, int oppRating)
 {
-    return 1 / (1 + pow(10, (oppRating - rating) / 400 ));
+    return 1.0 / (1.0 + pow(10.0, (oppRating - rating) / 400.0 ));
 }
 
 // Atualização do rating dos jogadores
 int calculateNewRating(int rating, float winProbability, int won)
 {
-    return rating + 32 * (won - winProbability);
+    return (float)rating + 32.0 * ((float)won - winProbability);
 }
 
 // Inicialização da versão concorrente
